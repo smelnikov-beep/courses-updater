@@ -70,36 +70,37 @@ async def check_bot_admin_in_channel(bot: Bot, channel_id: int) -> bool:
 
 
 async def send():
-    today = datetime.date.today()
-    updated_message = get_message()
-    async with sessionmaker() as session:
-        stmt = select(Channel)
-        result = await session.execute(stmt)
-        channels = result.scalars().all()
+    async with bot.session:
+        today = datetime.date.today()
+        updated_message = get_message()
+        async with sessionmaker() as session:
+            stmt = select(Channel)
+            result = await session.execute(stmt)
+            channels = result.scalars().all()
 
-        for channel in channels:
-            try:
-                if not channel.active_until or channel.active_until < today:
-                    continue
-                bot_is_admin = await check_bot_admin_in_channel(bot, channel.channel_id)
-                if not bot_is_admin:
-                    continue
-                if not channel.post_id:
-                    message = await bot.send_message(channel.channel_id,
-                                updated_message, reply_markup=make_keyboard(channel.link))
-                    channel.post_id = message.message_id
-                    session.add(channel)
-                else:
-                    try:
-                        await bot.edit_message_text(text=updated_message,
-                            chat_id=channel.channel_id,
-                            message_id=channel.post_id,
-                            reply_markup=make_keyboard(channel.link))
-                    except:
-                        ...
-            except:
-                ...
-        await session.commit()
+            for channel in channels:
+                try:
+                    if not channel.active_until or channel.active_until < today:
+                        continue
+                    bot_is_admin = await check_bot_admin_in_channel(bot, channel.channel_id)
+                    if not bot_is_admin:
+                        continue
+                    if not channel.post_id:
+                        message = await bot.send_message(channel.channel_id,
+                                    updated_message, reply_markup=make_keyboard(channel.link))
+                        channel.post_id = message.message_id
+                        session.add(channel)
+                    else:
+                        try:
+                            await bot.edit_message_text(text=updated_message,
+                                chat_id=channel.channel_id,
+                                message_id=channel.post_id,
+                                reply_markup=make_keyboard(channel.link))
+                        except:
+                            ...
+                except:
+                    ...
+            await session.commit()
 
 
 if __name__ == "__main__":
