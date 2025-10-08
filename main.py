@@ -80,6 +80,9 @@ async def check_message_exists(bot: Bot, chat_id: int, message_id: int) -> bool:
             case "Telegram server says - Bad Request: REACTION_EMPTY":
                 return True
 
+            case "Telegram server says - Bad Request: REACTION_INVALID":
+                return True
+
             case "Telegram server says - Bad Request: MESSAGE_ID_INVALID":
                 return False
 
