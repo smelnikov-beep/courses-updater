@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:17
+    environment:
+      - POSTGRES_DB=${DATABASE_NAME}
+      - POSTGRES_USER=${DATABASE_USERNAME}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USERNAME} -d ${DATABASE_NAME}"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    env_file:
+      - .env
+
+  bot:
+    build: .
+    container_name: tg_bot
+    restart: always
+    stop_signal: SIGINT
+    environment:
+      - MAIN_ADMIN_ID=${MAIN_ADMIN_ID}
+      - MAIN_ADMIN_USERNAME=${MAIN_ADMIN_USERNAME}
+      - SECOND_ADMIN_ID=${SECOND_ADMIN_ID}
+      - DEFAULT_LINK=${DEFAULT_LINK}
+      - BOT_TOKEN=${BOT_TOKEN}
+      - DB_URL=${DB_URL}
+      - DATABASE_NAME=${DATABASE_NAME}
+      - DATABASE_USERNAME=${DATABASE_USERNAME}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+    depends_on:
+        - db
+volumes:
+    postgres_data:
