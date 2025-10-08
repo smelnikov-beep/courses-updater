@@ -69,6 +69,26 @@ async def check_bot_admin_in_channel(bot: Bot, channel_id: int) -> bool:
         return False
 
 
+async def check_message_exists(bot: Bot, chat_id: int, message_id: int) -> bool:
+    try:
+        await bot.set_message_reaction(chat_id, message_id, None)
+
+        return True
+
+    except Exception as e:
+        match str(e):
+            case "Telegram server says - Bad Request: REACTION_EMPTY":
+                return True
+
+            case "Telegram server says - Bad Request: MESSAGE_ID_INVALID":
+                return False
+
+            case "Telegram server says - Bad Request: message to react not found":
+                return False
+
+        return False
+
+
 async def send():
     async with bot.session:
         today = datetime.date.today()
@@ -85,7 +105,9 @@ async def send():
                     bot_is_admin = await check_bot_admin_in_channel(bot, channel.channel_id)
                     if not bot_is_admin:
                         continue
-                    if not channel.post_id:
+                    if channel.post_id:
+                        is_actual = await check_message_exists(bot, channel.channel_id, channel.post_id)
+                    if not channel.post_id or not is_actual:
                         message = await bot.send_message(channel.channel_id,
                                     updated_message, reply_markup=make_keyboard(channel.link))
                         channel.post_id = message.message_id
