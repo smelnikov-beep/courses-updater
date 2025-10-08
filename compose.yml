@@ -20,7 +20,7 @@ services:
 
   bot:
     build: .
-    container_name: tg_bot
+    container_name: tg_bot_currency
     restart: always
     stop_signal: SIGINT
     environment:
